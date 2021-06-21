@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document</title>
+  <link rel="stylesheet" href="style.css">
+  <script src="vue.js"></script>
+
+</head>
+<body>
+
+<!-- Create new html pages/ Tasks from first 4 lessons -->
+
+  <!-- <div id="app">
+    <input type="text" v-model="newPageName">
+    <button v-on:click="createPage">Create Page</button>
+    <div v-for="page in pageList">
+      <h1>{{ page }} <a href="#" v-on:click="deletePage(page)">X</a></h1>
+    </div>
+  </div> -->
+
+  <!-- Iframe lessons -->
+
+
+  <iframe src="" frameborder="0"></iframe>
+  <input id="image-upload" type="file" accept="image/*" style="display: none;">
+
+  <div id="app">
+
+    <div class="panel" v-if="auth">
+      <button class="uk-button uk-button-default uk-margin-small-right" v-on:click="sideBarOpen">Panel</button>    
+
+      <button class="uk-button uk-button-secondary" uk-toggle="target: #modal-save-changes">Publish</button>
+      
+    </div>
+
+
+
+
+    <!-- Publish modal window for save changes start -->
+    <div id="modal-save-changes" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">  
+          <div class="uk-modal-title">Save Changes?</div>  
+          <p>All changes will be saved. Are you sure!</p>
+          <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            <button class="uk-button uk-button-secondary uk-modal-close" type="button" @click="onBtnSave">Save</button>
+          </p>
+      </div>
+    </div>
+    <!-- Publish modal window for save changes end -->
+
+
+    <!-- Sidebar menu start -->
+    <div id="customSidebar" class="custom-sidebar" v-bind:class="{ active: sideBarStyle }">
+      <div class="custom-sidebar__wrapp" >  
+          <button class="custom-sidebar__close" v-on:click="sideBarClose" type="button" uk-close></button>  
+          <ul class="custom-sidebar__list" uk-accordion="multiple: true">
+            <li>
+              <a class="uk-accordion-title custom-sidebar__list-title" href="#">Pages</a>
+              <ul class="uk-accordion-content">
+                <li v-for="page in pageList"><a href="#" v-on:click="openPage(page); sideBarClose();">{{ page }}</a></li>
+              </ul>
+            </li>
+            <li>
+              <a class="uk-accordion-title custom-sidebar__list-title" href="#">Backups</a>
+              <span v-if="backupsList.length < 1">No backups founded</span>
+              <ul class="uk-accordion-content">
+                <li v-for="backup in backupsList"><a href="#" v-on:click="restoreBackup(backup); sideBarClose();">Backup Date: {{ backup.time }}</a></li>
+              </ul>
+            </li>
+          </ul>    
+          <button class="uk-button uk-button-default uk-width-1-1 uk-margin-small-bottom custom-sidebar__btn" uk-toggle="target: #modal-meta-changes" v-on:click="sideBarClose();">Site Meta</button>
+          <button class="uk-button uk-button-default uk-width-1-1 uk-margin-small-bottom custom-sidebar__btn" type="button" uk-toggle="target: #modal-logout" v-on:click="sideBarClose();">Log Out</button>
+
+        </div>
+    </div>
+    <!-- Sidebar menu end -->
+
+    <!-- Modal window for meta edition start -->
+    <div id="modal-meta-changes" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">  
+        <div class="uk-modal-title uk-margin-medium">Site meta editor</div>  
+
+        <form class="uk-form-stacked">
+
+          <div class="uk-margin">
+              <label class="uk-form-label uk-animation-fade" for="modal-meta-title">Title</label>
+              <div class="uk-form-controls">
+                  <input class="uk-input" id="modal-meta-title" type="text" placeholder="Your title" v-model="meta.title">
+              </div>
+          </div>
+
+          <div class="uk-margin">
+            <label class="uk-form-label uk-animation-fade" for="modal-meta-keywords">Keywords</label>
+            <textarea class="uk-textarea no-resize" rows="5" placeholder="Your keywords" v-model="meta.keywords"></textarea>
+          </div>
+
+          <div class="uk-margin">
+            <label class="uk-form-label uk-animation-fade">Description</label>
+            <textarea class="uk-textarea no-resize" rows="5" placeholder="Meta Description" v-model="meta.description"></textarea>
+        </div>
+
+      
+      </form>
+          <p class="uk-text-right">
+            <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+            <button class="uk-button uk-button-secondary uk-modal-close" type="button" @click="applyMeta">Save</button>
+          </p>
+      </div>
+    </div>
+    <!-- Modal window for meta edition end -->
+    
+    <!-- Modal window logout start -->
+    <div id="modal-logout" uk-modal>
+      <div class="uk-modal-dialog uk-modal-body">  
+        <div class="uk-modal-title uk-margin-small">Logout</div>  
+        <p>You sure you want to exit admin panel? Changes not saved can be lost!</p>
+        <p class="uk-text-right">
+          <button class="uk-button uk-button-default uk-modal-close" type="button">Cancel</button>
+          <button class="uk-button uk-button-secondary uk-modal-close" type="button" @click="logout">Yes</button>
+        </p>
+      </div>
+    </div>
+    <!-- Modal window logout end -->
+
+    <!-- Loader  start -->
+    <div class="loader" v-bind:class="{ 'active': showLoader }">
+      <span uk-spinner="ratio: 8"></span>
+    </div>
+    <!-- Loader End-->
+
+    <!-- Login form start -->
+    <div class="login-form" v-if="!auth">
+      <div class="login-form__container">
+        <div class="login-form__header">Authorization</div>
+
+        <form>
+          <!-- <div class="login-form__row">
+            <label class="login-form__label" for="loginPassword">User</label>
+            <input class="login-form__input" id="loginPassword" type="text">  
+          </div> -->
+
+          <div class="login-form__row">
+            <label class="login-form__label" for="loginPassword">Password</label>
+            <input class="login-form__input" name="" id="loginPassword" type="password" v-model="password">  
+          </div>
+
+          <div class="login-form__row uk-margin-remove-bottom">
+            <div class="login-form__error-block">
+              <span class="login-form__error" v-if="loginError">Wrong password!</span>
+            </div>
+          </div>
+
+          <button class="uk-button uk-button-default uk-margin-small-top uk-align-center custom-sidebar__btn" type="button" @click="login">Log In</button>
+
+        </form>
+
+      </div>
+    </div>
+    <!-- Login form end -->
+
+  </div>
+
+
+
+  <script src="bundle.js"></script>   
+
+</body>
+</html>
